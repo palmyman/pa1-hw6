@@ -12,6 +12,41 @@
 #include <ctype.h>
 #endif /* __PROGTEST__ */
 
+#define LETTERS 71
+
+typedef struct TNode {
+    char * m_Dest;
+    struct TNode * m_Child[LETTERS];
+} TNODE;
+
+TNODE * mallocNode(void) {
+    TNODE * r = (TNODE *) malloc(sizeof ( *r));
+    int i;
+    r->m_Dest = NULL;
+    for (i = 0; i < LETTERS; i++) {
+        r->m_Child[i] = NULL;
+    }
+    return r;
+}
+
+int freeTree(TNODE * root) {    
+    int i, childrens = 0;
+    for (i = 0; i < LETTERS; i++) {
+        if (root->m_Child[i]) {
+            childrens++;
+            if (freeTree(root->m_Child[i])) {
+                root->m_Child[i] = NULL;
+                childrens--;
+            }
+        }
+    }
+    if (!root->m_Dest && !childrens) {
+        free(root);
+        return 1;
+    }
+    return 0;
+}
+
 char * newSpeak(const char * text, const char * (*replace)[2]) {
     /* todo */
 }
