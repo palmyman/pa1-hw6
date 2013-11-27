@@ -30,3 +30,69 @@ Odevzdávejte zdrojový soubor, který obsahuje implementaci požadované funkce
 Váš program bude spouštěn v omezeném testovacím prostředí. Je omezen dobou běhu (limit je vidět v logu referenčního řešení) a dále je omezena i velikost dostupné paměti. Časové limity jsou nastavené tak, aby rozumná implementace naivního algoritmu prošla všemi povinnými testy. Řešení fungující v povinných testech může získat nominálních 100% bodů. Bonusový test vyžaduje časově a paměťově efektivní výpočet i pro dlouhé řetězce obsahující mnoho slov a slovníky obsahující stovky dlouhých frází. První bonus kontroluje rychlost, druhý paměťovou náročnost.
 
 Pro implementaci musíte použít C řetězce. C++ řetězce (std::string) a STL jsou zakázané, jejich použití povede k chybě při kompilaci.
+
+```
+#ifndef __PROGTEST__
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#endif /* __PROGTEST__ */
+
+char * newSpeak ( const char * text, const char * (*replace)[2] )
+ {
+   /* todo */
+ }
+
+#ifndef __PROGTEST__
+int main ( int argc, char * argv [] )
+ {
+   char * res;
+
+   const char * d1 [][2] = {
+     { "murderer", "termination specialist" },
+     { "failure", "non-traditional success" },
+     { "specialist", "person with certified level of knowledge" },
+     { "dumb", "cerebrally challenged" },
+     { "teacher", "voluntary knowledge conveyor" },
+     { "evil", "nicenest deprived" },
+     { "incorrect answer", "alternative answer" },
+     { "student", "client" },
+     { NULL, NULL }
+    };
+
+
+   const char * d2 [][2] = {
+     { "fail", "suboptimal result" },
+     { "failure", "non-traditional success" },
+     { NULL, NULL }
+    };
+
+
+   res = newSpeak ( "Everybody is happy.", d1 );
+   /* res = "Everybody is happy."*/
+   free ( res );
+
+   res = newSpeak ( "The student answered an incorrect answer.", d1 );
+   /* res = "The client answered an alternative answer."*/
+   free ( res );
+
+   res = newSpeak ( "He was dumb, his failure was expected.", d1 );
+   /* res = "He was cerebrally challenged, his non-traditional success was expected."*/
+   free ( res );
+
+   res = newSpeak ( "The evil teacher became a murderer.", d1 );
+   /* res = "The nicenest deprived voluntary knowledge conveyor became a termination specialist."*/
+   free ( res );
+
+   res = newSpeak ( "Devil's advocate.", d1 );
+   /* res = "Dnicenest deprived's advocate."*/
+   free ( res );
+
+   res = newSpeak ( "Hello.", d2 );
+   /* res = NULL */
+
+   return 0;
+ }
+#endif /* __PROGTEST__ */
+```
