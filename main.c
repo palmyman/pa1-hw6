@@ -30,69 +30,73 @@ TNODE * mallocNode(void) {
     return node;
 }
 
-int freeDictionary(TNODE * root) {    
-    int i, childrens = 0;
-    for (i = 0; i < LETTERS; i++) {
-        if (root->child[i]) {
-            childrens++;
-            if (freeDictionary(root->child[i])) {
-                root->child[i] = NULL;
-                childrens--;
-            }
+void freeDictionary(TNODE * root) {
+    int i;
+    if (root) {
+        for (i = 0; i < LETTERS; i++) {
+            if (root->child[i])
+                freeDictionary(root->child[i]);
         }
-    }
-    if (!root->translation && !childrens) {
+        if (root->child) {
+            free(root->translation);
+        }
         free(root);
-        return 1;
     }
-    return 0;
 }
 
 int addTranslation(TNODE ** dictionary, const char * pattern, const char * translation) {
-    TNODE * node;            
-    if (*dictionary == NULL) {
-        *dictionary = mallocNode();
+    TNODE * node;
+    if (* dictionary == NULL) {
+        * dictionary = mallocNode();
     }
     node = *dictionary;
     int i, charIndex;
     for (i = 0; pattern[i] != '\0'; i++) {
-        if(node->translation != NULL) return 0;
+        if (node->translation != NULL)
+            return 0;
         charIndex = pattern[i] - FIRSTASCII;
         if (node->child[charIndex] == NULL) {
             node->child[charIndex] = mallocNode();
         }
         node = node->child[charIndex];
     }
-    if(node->translation != NULL) return 0;
-    * node->translation = * translation;    
+    if (node->translation != NULL)
+        return 0;
+    node->translation = (char *) malloc(strlen(translation) + 1);
+    strcpy(node->translation, translation);
     return 1;
 }
 
-TNODE ** newDictionary(const char * (*replace)[2]) {
-    TNODE ** root = NULL;
+TNODE * newDictionary(const char * (*replace)[2]) {
+    TNODE * dictionary = NULL;
     unsigned int i = 0;
-    while(replace[i][0] != NULL && replace[i][1] != NULL) {
-        if(!addTranslation(root, replace[i][0], replace[i][1]))
-            return NULL;
-    }
-    return root;
-}
-
-const char * search(const TNODE * dictionary, const char * pattern) {    
-    int i, charIndex;    
-    for (i = 0; i < pattern[i] != '\0'; i++) {
-        charIndex = pattern[i] - FIRSTASCII;
-        dictionary = dictionary->child[charIndex];
-        if (dictionary == NULL) {
+    while (replace[i][0] != NULL && replace[i][1] != NULL) {
+        if (!addTranslation(&dictionary, replace[i][0], replace[i][1])) {
+            freeDictionary(dictionary);
             return NULL;
         }
+        i++;
+    }
+    return dictionary;
+}
+
+char * findTranslation(const TNODE * dictionary, const char * pattern) {
+    int i, charIndex;
+    for (i = 0; pattern[i] != '\0'; i++) {
+        if (dictionary == NULL) return NULL;
+        charIndex = pattern[i] - FIRSTASCII;
+        dictionary = dictionary->child[charIndex];
     }
     return dictionary->translation;
 }
 
 char * newSpeak(const char * text, const char * (*replace)[2]) {
-    TNODE ** dictionary;
-    if(NULL == (dictionary = newDictionary(replace))) return NULL;
+    TNODE * dictionary;
+    if (NULL == (dictionary = newDictionary(replace))) return NULL;
+
+    char * translation = NULL;
+    freeDictionary(dictionary);
+    return translation;
 }
 
 #ifndef __PROGTEST__
@@ -112,7 +116,6 @@ int main(int argc, char * argv []) {
         { NULL, NULL}
     };
 
-
     const char * d2 [][2] = {
         { "fail", "suboptimal result"},
         { "failure", "non-traditional success"},
@@ -123,7 +126,7 @@ int main(int argc, char * argv []) {
     res = newSpeak("Everybody is happy.", d1);
     /* res = "Everybody is happy."*/
     free(res);
-
+    
     res = newSpeak("The student answered an incorrect answer.", d1);
     /* res = "The client answered an alternative answer."*/
     free(res);
