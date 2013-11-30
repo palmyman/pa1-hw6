@@ -12,43 +12,87 @@
 #include <ctype.h>
 #endif /* __PROGTEST__ */
 
-#define LETTERS 71
+#define LETTERS 95
+#define FIRSTASCII 32
 
 typedef struct TNode {
-    char * m_Dest;
-    struct TNode * m_Child[LETTERS];
+    char * translation;
+    struct TNode * child[LETTERS];
 } TNODE;
 
 TNODE * mallocNode(void) {
-    TNODE * r = (TNODE *) malloc(sizeof ( *r));
+    TNODE * node = (TNODE *) malloc(sizeof ( *node));
     int i;
-    r->m_Dest = NULL;
+    node->translation = NULL;
     for (i = 0; i < LETTERS; i++) {
-        r->m_Child[i] = NULL;
+        node->child[i] = NULL;
     }
-    return r;
+    return node;
 }
 
-int freeTree(TNODE * root) {    
+int freeDictionary(TNODE * root) {    
     int i, childrens = 0;
     for (i = 0; i < LETTERS; i++) {
-        if (root->m_Child[i]) {
+        if (root->child[i]) {
             childrens++;
-            if (freeTree(root->m_Child[i])) {
-                root->m_Child[i] = NULL;
+            if (freeDictionary(root->child[i])) {
+                root->child[i] = NULL;
                 childrens--;
             }
         }
     }
-    if (!root->m_Dest && !childrens) {
+    if (!root->translation && !childrens) {
         free(root);
         return 1;
     }
     return 0;
 }
 
+int addTranslation(TNODE ** dictionary, const char * pattern, const char * translation) {
+    TNODE * node;            
+    if (*dictionary == NULL) {
+        *dictionary = mallocNode();
+    }
+    node = *dictionary;
+    int i, charIndex;
+    for (i = 0; pattern[i] != '\0'; i++) {
+        if(node->translation != NULL) return 0;
+        charIndex = pattern[i] - FIRSTASCII;
+        if (node->child[charIndex] == NULL) {
+            node->child[charIndex] = mallocNode();
+        }
+        node = node->child[charIndex];
+    }
+    if(node->translation != NULL) return 0;
+    * node->translation = * translation;    
+    return 1;
+}
+
+TNODE ** newDictionary(const char * (*replace)[2]) {
+    TNODE ** root = NULL;
+    unsigned int i = 0;
+    while(replace[i][0] != NULL && replace[i][1] != NULL) {
+        if(!addTranslation(root, replace[i][0], replace[i][1]))
+            return NULL;
+    }
+    return root;
+}
+
+const char * search(const TNODE * dictionary, const char * pattern) {    
+    int i, charIndex;    
+    for (i = 0; i < pattern[i] != '\0'; i++) {
+        charIndex = pattern[i] - FIRSTASCII;
+        dictionary = dictionary->child[charIndex];
+        if (dictionary == NULL) {
+            return NULL;
+        }
+    }
+    return dictionary->translation;
+}
+
 char * newSpeak(const char * text, const char * (*replace)[2]) {
-    /* todo */
+    TNODE ** dictionary;
+    if(NULL == (dictionary = newDictionary(replace))) return NULL;
 }
 
 #ifndef __PROGTEST__
