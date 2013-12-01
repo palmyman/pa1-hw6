@@ -35,11 +35,12 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/sample/data.o
 
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-Wall -pedantic -Wno-long-long
 
 # CC Compiler Flags
 CCFLAGS=
@@ -65,7 +66,12 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/pa1-hw6: ${OBJECTFILES}
 ${OBJECTDIR}/main.o: main.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
+	$(COMPILE.c) -g -Wall -pedantic -Wno-long-long -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.c
+
+${OBJECTDIR}/sample/data.o: sample/data.c 
+	${MKDIR} -p ${OBJECTDIR}/sample
+	${RM} $@.d
+	$(COMPILE.c) -g -Wall -pedantic -Wno-long-long -MMD -MP -MF $@.d -o ${OBJECTDIR}/sample/data.o sample/data.c
 
 # Subprojects
 .build-subprojects:
