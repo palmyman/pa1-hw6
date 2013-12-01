@@ -73,6 +73,17 @@ int addTranslation(TNODE ** dictionary, const char * pattern, const char * trans
     return 1;
 }
 
+void printDictionary(const TNODE * dictionary) {
+    if (dictionary->translation)
+        printf("\t%s\n", dictionary->translation);
+    unsigned int i;
+    for (i = 0; i < LETTERS; i++) {
+        if (dictionary->child[i]) {
+            printDictionary(dictionary->child[i]);
+        }
+    }
+}
+
 TNODE * newDictionary(const char * (*replace)[2]) {
     TNODE * dictionary = NULL;
     unsigned int i = 0;
@@ -118,14 +129,13 @@ char * newSpeak(const char * text, const char * (*replace)[2]) {
         if (NULL != (match = findTranslation(dictionary, text + frontIndex, &tailIndex))) {
             frontIndex += tailIndex;
             translationLenght += strlen(match);
-            if(translationLenght >= maxLenght) translation = reallocString(translation, maxLenght *= 2);
+            while (translationLenght >= maxLenght) translation = reallocString(translation, maxLenght *= 2);
             strcat(translation, match);
         } else {
             if(translationLenght + 1 >= maxLenght) translation = reallocString(translation, maxLenght *= 2);
             translation[translationLenght++] = text[frontIndex];
             translation[translationLenght] = '\0';
-        }
-        //printf("front: %u\ttail: %u\tlenght: %u\n", frontIndex, tailIndex, translationLenght);
+        }        
     }
 
     freeDictionary(dictionary);
@@ -137,7 +147,7 @@ char * newSpeak(const char * text, const char * (*replace)[2]) {
 int main(int argc, char * argv []) {
     char * res;
     unsigned i = 0;
-
+    
 
     const char * d1 [][2] = {
         { "murderer", "termination specialist"},
@@ -150,7 +160,7 @@ int main(int argc, char * argv []) {
         { "student", "client"},
         { NULL, NULL}
     };
-
+    
     const char * d2 [][2] = {
         { "fail", "suboptimal result"},
         { "failure", "non-traditional success"},
@@ -165,7 +175,7 @@ int main(int argc, char * argv []) {
     res = newSpeak("The student answered an incorrect answer.", d1);
     printf("%u succes: %d\n", i++, strcmp(res, "The client answered an alternative answer.") == 0);
     free(res);
-    
+
     res = newSpeak("He was dumb, his failure was expected.", d1);
     printf("%u succes: %d\n", i++, strcmp(res, "He was cerebrally challenged, his non-traditional success was expected.") == 0);
     free(res);
@@ -179,7 +189,6 @@ int main(int argc, char * argv []) {
     free(res);
 
     res = newSpeak("Hello.", d2);
-    //reference = NULL;
     printf("%u succes: %d\n", i++, res == NULL);
 
     const char * tbl0 [][2] = {
@@ -199,12 +208,12 @@ int main(int argc, char * argv []) {
     res = newSpeak("bar", tbl1);
     printf("%u succes: %d\n", i++, res == NULL);
 
-//    extern const char * searchString;
-//    extern const char * replaceTable[][2];
-//    extern const char * correctResult;
-//    res = newSpeak(searchString, replaceTable);
-//    printf("%u succes: %d\n", i++, strcmp(res, correctResult) == 0);
-//    free(res);
+    extern const char * searchString;
+    extern const char * replaceTable[][2];
+    extern const char * correctResult;
+    res = newSpeak(searchString, replaceTable);
+    printf("%u succes: %d\n", i++, strcmp(res, correctResult) == 0);
+    free(res);
 
     return 0;
 }
