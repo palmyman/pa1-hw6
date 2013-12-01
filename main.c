@@ -12,8 +12,9 @@
 #include <ctype.h>
 #endif /* __PROGTEST__ */
 
-#define LETTERS 95
-#define FIRSTASCII 32
+#define LETTERS 127
+#define FIRST_ASCII 0
+#define DEFAULT_LENGHT 200;
 
 typedef struct TNode {
     char * translation;
@@ -54,7 +55,7 @@ int addTranslation(TNODE ** dictionary, const char * pattern, const char * trans
     for (i = 0; pattern[i] != '\0'; i++) {
         if (node->translation != NULL)
             return 0;
-        charIndex = pattern[i] - FIRSTASCII;
+        charIndex = pattern[i] - FIRST_ASCII;
         if (node->child[charIndex] == NULL) {
             node->child[charIndex] = mallocNode();
         }
@@ -80,21 +81,48 @@ TNODE * newDictionary(const char * (*replace)[2]) {
     return dictionary;
 }
 
-char * findTranslation(const TNODE * dictionary, const char * pattern) {
-    int i, charIndex;
+char * findTranslation(const TNODE * dictionary, const char * pattern, unsigned int * index) {
+    unsigned i, charIndex;    
     for (i = 0; pattern[i] != '\0'; i++) {
-        if (dictionary == NULL) return NULL;
-        charIndex = pattern[i] - FIRSTASCII;
+        * index = i;                        
+        charIndex = pattern[i] - FIRST_ASCII;
         dictionary = dictionary->child[charIndex];
+        if (dictionary == NULL) return NULL;
+        else if(dictionary->translation) break;
     }
     return dictionary->translation;
+}
+
+char * reallocString(char * string, unsigned lenght) {
+    char * newString;
+    newString = (char *) malloc(lenght + 1);
+    strcpy(newString, string);
+    free(string);
+    return newString;
 }
 
 char * newSpeak(const char * text, const char * (*replace)[2]) {
     TNODE * dictionary;
     if (NULL == (dictionary = newDictionary(replace))) return NULL;
 
-    char * translation = NULL;
+    unsigned int frontIndex = 0, tailIndex = 0, translationLenght = 0, maxLenght = DEFAULT_LENGHT;
+    char * match;
+    char * translation = (char *) malloc(maxLenght + 1);
+    translation[0] = '\0';
+    for (frontIndex = 0; text[frontIndex] != '\0'; frontIndex++) {        
+        if (NULL != (match = findTranslation(dictionary, text + frontIndex, &tailIndex))) {            
+            frontIndex += tailIndex;
+            translationLenght += strlen(match);
+            if(translationLenght >= maxLenght) translation = reallocString(translation, maxLenght *= 2);
+            strcat(translation, match);
+        } else {
+            if(translationLenght + 1 >= maxLenght) translation = reallocString(translation, maxLenght *= 2);
+            translation[translationLenght++] = text[frontIndex];
+            translation[translationLenght] = '\0';
+        }
+        //printf("front: %u\ttail: %u\tlenght: %u\n", frontIndex, tailIndex, translationLenght);
+    }
+
     freeDictionary(dictionary);
     return translation;
 }
@@ -103,6 +131,8 @@ char * newSpeak(const char * text, const char * (*replace)[2]) {
 
 int main(int argc, char * argv []) {
     char * res;
+    unsigned i = 0;
+    
 
     const char * d1 [][2] = {
         { "murderer", "termination specialist"},
@@ -123,29 +153,29 @@ int main(int argc, char * argv []) {
     };
 
 
-    res = newSpeak("Everybody is happy.", d1);
-    /* res = "Everybody is happy."*/
-    free(res);
-    
+    res = newSpeak("Everybody is happy.", d1);    
+    printf("%u succes: %d\n", i++, strcmp(res, "Everybody is happy.") == 0);
+    free(res);    
+
     res = newSpeak("The student answered an incorrect answer.", d1);
-    /* res = "The client answered an alternative answer."*/
+    printf("%u succes: %d\n", i++, strcmp(res, "The client answered an alternative answer.") == 0);
     free(res);
 
     res = newSpeak("He was dumb, his failure was expected.", d1);
-    /* res = "He was cerebrally challenged, his non-traditional success was expected."*/
+    printf("%u succes: %d\n", i++, strcmp(res, "He was cerebrally challenged, his non-traditional success was expected.") == 0);
     free(res);
 
     res = newSpeak("The evil teacher became a murderer.", d1);
-    /* res = "The nicenest deprived voluntary knowledge conveyor became a termination specialist."*/
+    printf("%u succes: %d\n", i++, strcmp(res, "The nicenest deprived voluntary knowledge conveyor became a termination specialist.") == 0);
     free(res);
 
     res = newSpeak("Devil's advocate.", d1);
-    /* res = "Dnicenest deprived's advocate."*/
+    printf("%u succes: %d\n", i++, strcmp(res, "Dnicenest deprived's advocate.") == 0);
     free(res);
 
     res = newSpeak("Hello.", d2);
-    /* res = NULL */
-
+    //reference = NULL;
+    printf("%u succes: %d\n", i++, res == NULL);
     return 0;
 }
 #endif /* __PROGTEST__ */
